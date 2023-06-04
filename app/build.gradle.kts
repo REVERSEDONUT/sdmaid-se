@@ -154,6 +154,7 @@ dependencies {
     implementation(project(":app-common-shizuku"))
     implementation(project(":app-common-io"))
     implementation(project(":app-common-pkgs"))
+    implementation(project(":app-common-shell"))
 
     addDI()
     addCoroutines()
