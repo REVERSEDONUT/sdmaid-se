@@ -382,10 +382,19 @@ class LocalGateway @Inject constructor(
     ): Flow<LocalPathLookup> = runIO {
         try {
             val javaFile = path.asFile()
-            val canRead = if (mode == Mode.ROOT) {
-                false
-            } else {
-                javaFile.canRead()
+            val canRead = when (mode) {
+                Mode.AUTO, Mode.NORMAL -> if (javaFile.canRead()) {
+                    try {
+                        javaFile.listFiles2()
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                } else {
+                    false
+                }
+
+                else -> false
             }
 
             when {
@@ -411,9 +420,9 @@ class LocalGateway @Inject constructor(
                         log(TAG, VERBOSE) { "walk($mode->ROOT, indirect): $path" }
                         // Can't pass functions via IPC
                         IndirectLocalWalker(
-                            this@LocalGateway,
+                            gateway = this@LocalGateway,
                             mode = Mode.ROOT,
-                            path,
+                            start = path,
                             onFilter = { lookup -> options.onFilter?.invoke(lookup) ?: true },
                             onError = { lookup, exception -> options.onError?.invoke(lookup, exception) ?: true },
                         )
@@ -428,9 +437,9 @@ class LocalGateway @Inject constructor(
                         log(TAG, VERBOSE) { "walk($mode->ADB, indirect): $path" }
                         // Can't pass functions via IPC
                         IndirectLocalWalker(
-                            this@LocalGateway,
+                            gateway = this@LocalGateway,
                             mode = Mode.ADB,
-                            path,
+                            start = path,
                             onFilter = { lookup -> options.onFilter?.invoke(lookup) ?: true },
                             onError = { lookup, exception -> options.onError?.invoke(lookup, exception) ?: true },
                         )
